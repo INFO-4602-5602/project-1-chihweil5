@@ -1,0 +1,416 @@
+<html>
+<head>
+<title>Project 1</title>
+<link rel="stylesheet" href="project1.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+<!--Put your D3 import statement between these two lines-->
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+<!--Put your D3 import statement between these two lines-->
+</head>
+
+<body>
+	<div id="partOne">
+        <h1>Part One: </h1>
+        I've made a change!
+	</div>
+
+    <div id="partTwo">
+        <h1>Part Two: </h1>
+        <div id="scatterplot">
+        </div>
+	</div>
+
+    <div id="partThree">
+        <h1>Part Three &amp; Four: </h1>
+        <div id="linegraph">
+            <p id="scatterLabel"></p>
+        </div>
+	</div>
+
+    <div id="partFive">
+        <h1>Part Five: </h1>
+        <div id="scatterplotSet">
+        </div>
+	</div>
+
+    <script type="text/javascript">
+        // Put your part one code here ***********************
+        d3.csv("/data/anscombe_I.csv", function(data) {
+          checkDataset(data);
+          drawScatterPlot(data); // draw scatterplot
+          drawLineGraph(data); // draw line graph
+        });
+        d3.csv("/data/anscombe_II.csv", function(data) {
+          checkDataset(data);
+        });
+        d3.csv("/data/anscombe_III.csv", function(data) {
+          checkDataset(data);
+        });
+        d3.csv("/data/anscombe_IV.csv", function(data) {
+          checkDataset(data);
+        });
+        // Leave this to test your data uploading. All data uploading should be above this line
+        function checkDataset(dataset) {
+            if (dataset.length == 11)
+                $("#partOne").append("<p>data loaded correctly</p>");
+            else
+                $("#partOne").append("<p>data loaded incorrectly. Try using the debugger to help you find the bug!</p>");
+        }
+
+        // Put your part two code here ***********************
+        // the drawScatterPlot function is called in part 1 while reading the data
+        // ref:
+        // scatterplot: https://bl.ocks.org/d3noob/2505b09d0feb51d0c9873cc486f10f67
+        // color cheat sheet: https://www.w3.org/TR/SVG/types.html#ColorKeywords
+        function drawScatterPlot(data) {
+            var margin = {top: 20, right: 20, bottom: 30, left: 60},
+                width = 720 - margin.left - margin.right,
+                height = 375 - margin.top - margin.bottom;
+
+            // set the ranges
+            var x = d3.scaleLinear().range([0, width]);
+            var y = d3.scaleLinear().range([height, 0]);
+
+            // define tooltip
+            var tooltip = d3.select("#scatterplot").append("div")
+                    .attr("class", "tooltip")
+                    .style("opacity", 0);
+
+            // Add the svg canvas by id
+            var svg = d3.select("#scatterplot").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // format the data
+            data.forEach(function(d) {
+              d.x = +d.x;  //+ tries to cast x to a number.
+              d.y = +d.y;
+            });
+
+            // Scale the range of the data, using d3.max to create y scale
+            x.domain(d3.extent(data, function(d) { return d.x; }));
+            y.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+            // Add the scatterplot
+            svg.selectAll("dot")
+              .data(data)
+            .enter().append("circle")
+              .attr("r", 5)
+              .attr("cx", function(d) { return x(d.x); })
+              .attr("cy", function(d) { return y(d.y); })
+              .style("fill", function(d) { return d3.rgb("darkblue")})
+              //on mouse click
+              .on("click", function(d) {
+                    console.log(d);
+                    $("#scatterLabel")
+                        .html("You click on: <br/> x = " + d.x + "<br/>" + "y = " + d.y + "<br/>") //add x, y info
+                        .css("fontSize", "18px"); // change text size
+                })
+              //on mouse hover
+              .on("mouseover", function(d) {
+                d3.select(this).transition()
+                        .duration(200)
+                        .style("fill", function(d) { return d3.rgb("orangered")}) //change color to orange
+                        .style("opacity", .9); // animation
+                tooltip.html("(" + d.x + ", " + d.y + ")")
+                  .style("left", (d3.event.pageX) + "px")
+                  .style("top", (d3.event.pageY - 28) + "px")
+                  .style("opacity", .9)
+                 .transition()
+                 .duration(200);
+
+                })
+              .on("mouseout", function(d) {
+                d3.select(this).transition()
+                        .duration(500)
+                        .style("fill", function(d) { return d3.rgb("darkblue")})
+                });
+
+            // Add the X Axis
+            svg.append("g")
+              .attr("transform", "translate(0," + height + ")")
+              .call(d3.axisBottom(x));
+
+            // Add the Y Axis
+            svg.append("g")
+              .call(d3.axisLeft(y));
+
+        }
+        // Put your part three & four code here ***********************
+        // the drawLineGraph function is called in part 1 while reading the data
+        // ref:
+        // line graph:https://bl.ocks.org/d3noob/4db972df5d7efc7d611255d1cc6f3c4f
+        function drawLineGraph(data) {
+            var margin = {top: 20, right: 20, bottom: 30, left: 60},
+                width = 720 - margin.left - margin.right,
+                height = 375 - margin.top - margin.bottom;
+
+            // set the ranges
+            var x = d3.scaleLinear().range([0, width]);
+            var y = d3.scaleLinear().range([height, 0]);
+
+            // Add the svg canvas by id
+            var svg = d3.select("#linegraph").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+              .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            // format the data
+            data.forEach(function(d) {
+              d.x = +d.x;  //+ tries to cast x to a number.
+              d.y = +d.y;
+            });
+
+            //sort the dataset by x
+            data.sort(function compare(a, b){
+                return a.x - b.x;
+            });
+
+            // Add the line
+            var line = d3.line()
+                .x(function(d) { return x(d.x); })
+                .y(function(d) { return y(d.y); });
+
+            // Scale the range of the data, using d3.max to create y scale
+            x.domain(d3.extent(data, function(d) { return d.x; }));
+            y.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+            // Add the line graph
+            svg.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", 1.5)
+                .attr("d", line);
+
+            // Add the X Axis
+            svg.append("g")
+              .attr("transform", "translate(0," + height + ")")
+              .call(d3.axisBottom(x));
+
+            // Add the Y Axis
+            svg.append("g")
+              .call(d3.axisLeft(y));
+        }
+
+        //Part 4: interaction
+        //I add interaction function to drawScatterPlot function
+
+        // Put your part five code here ***********************
+
+        var	margin = {top: 30, right: 20, bottom: 30, left: 50},
+        	width = 300 - margin.left - margin.right,
+        	height = 200 - margin.top - margin.bottom;
+
+        // set the ranges
+        var x = d3.scaleLinear().range([0, width]);
+        var y = d3.scaleLinear().range([height, 0]);
+
+        // Define the axes
+        var	xAxis = d3.axisBottom(x);
+        var	yAxis = d3.axisLeft(y);
+
+        // First chart
+        var chart1 = d3.select("#scatterplotSet").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.csv("/data/anscombe_I.csv", function(data) {
+            // format the data
+            data.forEach(function(d) {
+              d.x = +d.x;  //+ tries to cast x to a number.
+              d.y = +d.y;
+            });
+
+            // Scale the range of the data, using d3.max to create y scale
+            x.domain(d3.extent(data, function(d) { return d.x; }));
+            y.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+            // Add the scatterplot
+            chart1.selectAll("dot")
+              .data(data)
+            .enter().append("circle")
+              .attr("r", 3)
+              .attr("cx", function(d) { return x(d.x); })
+              .attr("cy", function(d) { return y(d.y); })
+              .text("Anscombe I")
+              .style("fill", function(d) { return d3.rgb("darkblue")});
+
+            // Add title
+            chart1.append("text")
+                .attr("x", (width / 2))
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")
+                .style("font-size", "16px")
+                .text("Anscombe I");
+
+            // Add the X Axis
+         	chart1.append("g")
+         		.attr("class", "x axis")
+         		.attr("transform", "translate(0," + height + ")")
+         		.call(xAxis);
+
+         	// Add the Y Axis
+         	chart1.append("g")
+         		.attr("class", "y axis")
+         		.call(yAxis);
+        });
+
+
+        // Second chart
+        var chart2 = d3.select("#scatterplotSet").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.csv("/data/anscombe_II.csv", function(data) {
+            // format the data
+            data.forEach(function(d) {
+              d.x = +d.x;  //+ tries to cast x to a number.
+              d.y = +d.y;
+            });
+
+            // Scale the range of the data, using d3.max to create y scale
+            x.domain(d3.extent(data, function(d) { return d.x; }));
+            y.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+            // Add the scatterplot
+            chart2.selectAll("dot")
+              .data(data)
+            .enter().append("circle")
+              .attr("r", 3)
+              .attr("cx", function(d) { return x(d.x); })
+              .attr("cy", function(d) { return y(d.y); })
+              .text("Anscombe II")
+              .style("fill", function(d) { return d3.rgb("darkblue")});
+
+            // Add title
+            chart2.append("text")
+                .attr("x", (width / 2))
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")
+                .style("font-size", "16px")
+                .text("Anscombe II");
+
+            // Add the X Axis
+         	chart2.append("g")
+         		.attr("class", "x axis")
+         		.attr("transform", "translate(0," + height + ")")
+         		.call(xAxis);
+
+         	// Add the Y Axis
+         	chart2.append("g")
+         		.attr("class", "y axis")
+         		.call(yAxis);
+        });
+
+        // Third chart
+        var chart3 = d3.select("#scatterplotSet").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.csv("/data/anscombe_III.csv", function(data) {
+            // format the data
+            data.forEach(function(d) {
+              d.x = +d.x;  //+ tries to cast x to a number.
+              d.y = +d.y;
+            });
+
+            // Scale the range of the data, using d3.max to create y scale
+            x.domain(d3.extent(data, function(d) { return d.x; }));
+            y.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+            // Add the scatterplot
+            chart3.selectAll("dot")
+              .data(data)
+            .enter().append("circle")
+              .attr("r", 3)
+              .attr("cx", function(d) { return x(d.x); })
+              .attr("cy", function(d) { return y(d.y); })
+              .text("Anscombe III")
+              .style("fill", function(d) { return d3.rgb("darkblue")});
+
+            // Add title
+            chart3.append("text")
+                .attr("x", (width / 2))
+                .attr("y", 0 - (margin.top / 2))
+                .attr("text-anchor", "middle")
+                .style("font-size", "16px")
+                .text("Anscombe III");
+
+            // Add the X Axis
+         	chart3.append("g")
+         		.attr("class", "x axis")
+         		.attr("transform", "translate(0," + height + ")")
+         		.call(xAxis);
+
+         	// Add the Y Axis
+         	chart3.append("g")
+         		.attr("class", "y axis")
+         		.call(yAxis);
+        });
+
+        // Forth chart
+        var chart4 = d3.select("#scatterplotSet").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        d3.csv("/data/anscombe_IV.csv", function(data) {
+            // format the data
+            data.forEach(function(d) {
+              d.x = +d.x;  //+ tries to cast x to a number.
+              d.y = +d.y;
+            });
+
+            // Scale the range of the data, using d3.max to create y scale
+            x.domain(d3.extent(data, function(d) { return d.x; }));
+            y.domain([0, d3.max(data, function(d) { return d.y; })]);
+
+            // Add the scatterplot
+            chart4.selectAll("dot")
+              .data(data)
+            .enter().append("circle")
+              .attr("r", 3)
+              .attr("cx", function(d) { return x(d.x); })
+              .attr("cy", function(d) { return y(d.y); })
+              .style("fill", function(d) { return d3.rgb("darkblue")});
+
+            // Add title
+            chart4.append("text")
+             .attr("x", (width / 2))
+             .attr("y", 0 - (margin.top / 2))
+             .attr("text-anchor", "middle")
+             .style("font-size", "16px")
+             .text("Anscombe IV");
+
+            // Add the X Axis
+         	chart4.append("g")
+         		.attr("class", "x axis")
+         		.attr("transform", "translate(0," + height + ")")
+         		.call(xAxis);
+
+         	// Add the Y Axis
+         	chart4.append("g")
+         		.attr("class", "y axis")
+         		.call(yAxis);
+        });
+
+
+        // Bell: Tooltips
+        // ref: https://bl.ocks.org/d3noob/257c360b3650b9f0a52dd8257d7a2d73
+
+    </script>
+</body>
+
+
+</html>
